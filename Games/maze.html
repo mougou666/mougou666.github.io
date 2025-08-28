@@ -1,0 +1,212 @@
+
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title></title>
+</head>
+<body>
+    <div>
+    <canvas id="mycanvas" width="550px" height="550px"></canvas>
+        <button onclick="draw()">开始游戏</button>
+    </div>
+</body>
+
+</html>
+<script>
+
+        var canvas = document.getElementById("mycanvas");
+
+        var context = canvas.getContext("2d");
+        context.strokeStyle = 'gray'
+        //context.moveTo(0, 0);
+        //context.lineTo(20, 10)
+        //context.stroke();
+
+
+    function drawCell(context) {
+        for (var i = 0; i <= totalCell; i++) {
+            
+            context.moveTo(i * cellWidth, 0);
+            context.lineTo(i * cellWidth, totalCell * cellWidth);
+            context.stroke();
+
+            context.moveTo(0, i * cellWidth);
+            context.lineTo(totalCell * cellWidth, i * cellWidth);
+            context.stroke();
+        }
+        connectCell();
+
+        window.addEventListener('keydown', doKeyDown, true);
+    }
+    function doKeyDown(e) {
+        //alert(x+" "+y);
+        // console.log(x+" "+y);测试
+        var keyID = e.keyCode ? e.keyCode : e.which;//获取按键的Unicode代码值
+        if (true) {
+            if (keyID === 38 || keyID === 87) { // W键以及上键的移动方向
+                if (p[cl[0]][cl[1]]["top"]) {
+                    clearCurrentLocation();
+                    cl[1] = cl[1] - 1;
+                    drawCurrentLoaction();
+                }
+            }
+            else if (keyID === 39 || keyID === 68) { // D键以及you键的移动方向
+                if (p[cl[0]][cl[1]]["right"]) {
+                    clearCurrentLocation();
+                    cl[0] = cl[0] + 1;
+                    drawCurrentLoaction();
+                }
+            }
+            else if (keyID === 40 || keyID === 83) { // S键以及下键的移动方向
+                if (p[cl[0]][cl[1]]["down"]) {
+                    clearCurrentLocation();
+                    cl[1] = cl[1] + 1;
+                    drawCurrentLoaction();
+                }
+            }
+            else if (keyID === 37 || keyID === 65) { // A键以及zuo向
+                if (p[cl[0]][cl[1]]["left"]) {
+                    clearCurrentLocation();
+                    cl[0] = cl[0] - 1;
+                    drawCurrentLoaction();
+                }
+            }
+        }
+    }
+    function clearCurrentLocation() {
+        context.clearRect(cl[0] * cellWidth + 1, cl[1] * cellWidth + 1, cellWidth - 2, cellWidth - 2);
+    }
+    function drawCurrentLoaction() {
+        context.beginPath();
+        context.arc(cellWidth * (cl[0] + 1) - cellWidth / 2, cellWidth * (cl[1] + 1) - cellWidth / 2, cellWidth / 3, 0, 2 * Math.PI);
+        context.fillStyle = "green";
+        context.fill();
+        context.stroke();
+
+        if (cl[0] == totalCell - 1 && cl[1] == totalCell - 1) {
+            cl[0] = 0;
+            cl[1] = 0;
+            totalCell = totalCell + 1
+            draw()
+        }
+    }
+    var p = [];
+    var cl = [0, 0];
+    function connectCell() {
+        
+        //14*14的格子
+        //每个格子的父亲都是自己
+        for (var i = 0; i < totalCell; i++) {
+            p[i] = [];
+            for (var j = 0; j < totalCell; j++) {
+                p[i][j] = {};
+                p[i][j]["rowcol"] = "row=" + i + " col=" + j;
+                p[i][j]["no"] = i * totalCell + j + 1;
+            }
+        }
+        //drawWhiteLine(0, 2, 2)
+        //p[2][2] = p[2][2 - 1];
+        //drawWhiteLine(1, 2, 2)
+        //p[2+1][2] = p[2][2];
+        //drawWhiteLine(2, 2, 2)
+        //p[2][2+1] = p[2][2];
+        //drawWhiteLine(3, 2, 2)
+        //p[2][2] = p[2-1][2];
+        while (p[0][0]["no"] != p[totalCell - 1][totalCell - 1]["no"]) {
+            //随机格子
+            var num = Math.ceil(Math.random() * totalCell * totalCell);
+            col = Math.floor((num - 1) / totalCell);
+            row = (num - 1) % totalCell;
+
+            //0123,上右下左，顺时针
+            var r = Math.floor(Math.random() * 4);
+            if (r == 0) {
+                if (col == 0)
+                    continue;
+                else {
+                    drawWhiteLine(r, row, col)
+                    p[row][col]["top"] = true;
+                    p[row][col - 1]["down"] = true;
+                    editP(p, p[row][col]["no"], p[row][col - 1]["no"], Math.min(p[row][col - 1]["no"], p[row][col]["no"]));
+                }
+            } else if (r == 1) {
+                if (row == (totalCell - 1))
+                    continue;
+                else {
+                    drawWhiteLine(r, row, col);
+                    p[row][col]["right"] = true;
+                    p[row + 1][col]["left"] = true;
+                    editP(p, p[row][col]["no"], p[row + 1][col]["no"], Math.min(p[row + 1][col]["no"], p[row][col]["no"]));
+                }
+            } else if (r == 2) {
+                if (col == (totalCell - 1))
+                    continue;
+                else {
+                    drawWhiteLine(r, row, col);
+                    p[row][col]["down"] = true;
+                    p[row][col + 1]["top"] = true;
+                    editP(p, p[row][col]["no"], p[row][col + 1]["no"], Math.min(p[row][col + 1]["no"], p[row][col]["no"]));
+                }
+            } else if (r == 3) {
+                if (row == 0)
+                    continue;
+                else {
+                    drawWhiteLine(r, row, col);
+                    p[row][col]["left"] = true;
+                    p[row - 1][col]["right"] = true;
+                    editP(p, p[row][col]["no"], p[row - 1][col]["no"], Math.min(p[row - 1][col]["no"], p[row][col]["no"]));
+                }
+            }
+        }
+        
+        drawStartDest();
+    }
+    function drawStartDest() {
+        context.beginPath();
+        context.arc(cellWidth / 2, cellWidth / 2, cellWidth / 3, 0, 2 * Math.PI);
+        context.fillStyle = "green";
+        context.fill();
+        context.stroke();
+
+        context.beginPath();
+        context.arc(cellWidth * totalCell - cellWidth / 2, cellWidth * totalCell - cellWidth / 2, cellWidth / 3, 0, 2 * Math.PI);
+        context.fillStyle = "red";
+        context.fill();
+        context.stroke();
+    }
+    var row = 0;
+    var col = 0;
+    function editP(p, oldvalue,oldvalue2, newvalue) {
+        p.forEach(function (item) {
+            item.forEach(function (v) {
+                if (v["no"] == oldvalue || v["no"] == oldvalue2)
+                    v["no"] = newvalue;
+            })
+        })
+    }
+    function drawWhiteLine(location, i, j) {
+        if (location == 0) {
+            context.clearRect(i * cellWidth + 1, (j - 1) * cellWidth + 1, cellWidth - 2, cellWidth * 2 -2);
+        }else if (location == 1) {
+            context.clearRect(i * cellWidth + 1, j * cellWidth + 1, cellWidth * 2 - 2, cellWidth - 2);
+        }else if (location == 2) {
+            context.clearRect(i * cellWidth + 1, j * cellWidth + 1, cellWidth - 2, cellWidth * 2 - 2);
+        } else if (location == 3) {
+            context.clearRect((i - 1) * cellWidth + 1, j * cellWidth + 1, cellWidth * 2 - 2, cellWidth - 2);
+        }
+    }
+    var cellWidth = 16;
+    var totalCell = 15;
+    function draw() {
+if(totalCell==25){
+alert('别玩了，已经通关了')
+window.close();
+return
+}
+        drawCell(context)
+    }
+</script>
+
